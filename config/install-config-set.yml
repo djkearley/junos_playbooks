@@ -1,0 +1,98 @@
+---
+- name: Install Configuration File
+  hosts:
+    - junos-devices
+  roles:
+    - Juniper.junos
+  connection: local
+  gather_facts: no
+
+  vars_prompt:
+  - name: USER
+    prompt: Junos Device(s) Username
+    private: no
+
+  - name: PWD
+    prompt: Junos Device(s) Password
+    private: yes
+
+  tasks:
+#  - name: Set source config directory for the pending changes
+#    set_fact:
+#      config_dir: /home/dkearley/playbooks/junos/configs
+  - name: Establish output directories for these operations
+    set_fact:
+      config_dir: configs
+      preconfig_dir: configs/before
+      final_config_dir: configs/final
+      changes_dir: configs/changes
+
+  - name: Confirm/Create directory for the preconfig files was created
+    file:
+      path: "{{ preconfig_dir }}"
+      state: directory
+
+  - name: Confirm/Create the directory for the final config files was created
+    file:
+      path: "{{ final_config_dir }}"
+      state: directory
+
+  - name: Confirm/Create the directory for the change files was created
+    file:
+      path: "{{ changes_dir }}"
+      state: directory
+
+  - name: Retrieve the current committed device configuration and save to "{{ preconfig_dir }}"
+    juniper_junos_config:
+      provider:
+        host: "{{ ansible_host }}"
+        user: "{{ USER }}"
+        passwd: "{{ PWD }}"
+        timeout: 600
+      retrieve: 'committed'
+      format: 'set'
+      commit: 'false'
+      dest_dir: "{{ preconfig_dir }}"
+
+  - name: Load configurations onto device from "{{ config_dir }}"
+    juniper_junos_config:
+      provider:
+        host: "{{ ansible_host }}"
+        user: "{{ USER }}"
+        passwd: "{{ PWD }}"
+        timeout: 600
+      load: 'merge'
+#      format: 'set'
+#      retrieve: 'candidate'
+#      dest_dir: '{{ changes_dir }}'
+#      diff: true
+#      dest_dir: "{{ changes_dir }}"
+      comment: 'Ansible driven config change'
+      src: "{{ config_dir }}/ntp-server.set"
+#    register: commit
+
+  - name: Retrieve the final committed configuration and save to "{{ final_config_dir }}"
+    juniper_junos_config:
+      provider:
+        host: "{{ ansible_host }}"
+        user: "{{ USER }}"
+        passwd: "{{ PWD }}"
+        timeout: 600
+      retrieve: 'committed'
+      format: 'set'
+      commit: 'false'
+      dest_dir: "{{ final_config_dir }}"
+
+  - name: Record the configuration changes to "{{ changes_dir }}"
+    juniper_junos_config:
+      provider:
+        host: "{{ ansible_host }}"
+        user: "{{ USER }}"
+        passwd: "{{ PWD }}"
+        timeout: 600
+      rollback: 1
+      diff: true
+      check: false
+      commit: false
+      dest_dir: "{{ changes_dir }}"
+    register: commit-change
