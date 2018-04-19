@@ -26,25 +26,21 @@
       state: directory
 
   - name: Get Interface Information
-    juniper_junos_rpc:
-      rpcs:
-        - "get-interface-information"
-      output: text
-#      output: xml
-#      output: json
+    juniper_junos_command:
+      commands:
+        - 'show interface terse media'
+      format: text
+#      format: xml
+#      format: json
       dest_dir: "{{ out_dir }}"
-      kwargs:
-        - terse: True
-          media: True
-          interface-name: '[xg]e*'
       provider:
         host: "{{ ansible_host }}"
         user: "{{ USER }}"
         passwd: "{{ PWD }}"
-        port: 830
-        timeout: 600
+#        port: 830
+#        timeout: 600
     register: junos_interfaces
 
   - name: Print results
     debug:
-     var: junos_interfaces.stdout_lines 
+      var: junos_interfaces.stdout_lines 

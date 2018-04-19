@@ -1,0 +1,30 @@
+---
+- name: Install Junos Software
+  hosts: junos-devices
+  connection: local
+  gather_facts: no
+  roles:
+    - Juniper.junos
+
+  vars_prompt:
+  - name: USER
+    prompt: Junos Device(s) Username
+    private: no
+
+  - name: PWD
+    prompt: Junos Device(s) Password
+    private: yes
+
+  tasks:
+    - name: Execute a basic Junos software upgrade.
+      juniper_junos_software:
+        local_package: "~/Documents/Juniper/Software/vSRX/junos-vsrx-15.1X49-D120.3-domestic.tgz"
+        provider:
+          host: "{{ ansible_host }}"
+          user: "{{ USER }}"
+          passwd: "{{ PWD }}"
+      register: results
+
+    - name: Print the results.
+      debug:
+        var: results

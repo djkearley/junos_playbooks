@@ -1,0 +1,63 @@
+---
+- name: Get Junos Facts
+  hosts: junos-devices
+  connection: local
+  gather_facts: no
+  roles:
+    - Juniper.junos
+
+  vars_prompt:
+  - name: USER
+    prompt: Junos Device(s) Username
+    private: no
+
+  - name: PWD
+    prompt: Junos Device(s) Password
+    private: yes
+
+  tasks:
+  - name: Generate a directory for the pending output
+    set_fact:
+     out_dir: ~/playbooks/outputs
+     temp_dir: ~/playbooks/templates
+#     f_date: "{{ lookup('pipe','date \"+%Y-%m-%d_%H:%M\"' }}"
+
+  - name: Confirm/Create the output directory
+    file:
+     path: "{{ out_dir }}"
+     state: directory
+
+  - name: Log into the device and gather the facts.
+    juniper_junos_facts:
+      provider:
+        host: "{{ ansible_host }}"
+        user: "{{ USER }}"
+        passwd: "{{ PWD }}"
+      savedir: "{{ out_dir }}"
+    register: results
+
+  - name: Ansible date fact example
+    debug:
+      var: ansible_facts.ansible_date_time.date 
+
+#  - name: Print the results.
+#    debug:
+#      var: results
+
+#  - name: Print the version.
+#    debug:
+#      var: ansible_facts.junos.version
+
+#  - name: Structred print the version by hostname.
+#    debug:
+#      msg: "{{ ansible_facts.junos.hostname }} is running version {{ ansible_facts.junos.version }}"
+
+#  - name: Preparing results file
+#    shell: cp {{ temp_dir }}/fact_summary_template.csv {{ output_dir }}/my_results_{{ file_suffix }}.csv 
+#    delegate_to: localhost
+
+#  - name: Write to results file
+#    shell: echo {{ ansible_facts.junos.hostname }},{{ ansible_facts.junos.model }},{{ ansible_facts.junos.version }} >> {{ output_dir }}/my_results_{{ file_suffix }}.csv 
+#   delegate_to: localhost
+
+      

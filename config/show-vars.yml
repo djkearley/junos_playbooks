@@ -1,0 +1,11 @@
+---
+- name: Show variables 3 
+  hosts:
+   - junos-devices
+  connection: local
+  gather_facts: no
+
+  tasks:
+  - name: Show ansible variables
+    debug:
+      var: vars
